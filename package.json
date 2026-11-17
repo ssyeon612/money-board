@@ -1,0 +1,7 @@
+{
+  "name": "money-board",
+  "private": true,
+  "scripts": { "build": "node scripts/build.mjs", "test": "node --test" },
+  "engines": { "node": ">=22" },
+  "dependencies": { "google-auth-library": "^10.0.0" }
+}
