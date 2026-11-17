@@ -2,6 +2,22 @@
 
 Google Sheets를 읽어 표시하는 개인 자산 대시보드입니다.
 
+## 로컬 실행
+
+### Netlify에 등록한 설정으로 실행
+
+`npm run dev:netlify` 실행 후 http://localhost:8888 에 접속합니다.
+Netlify Dev가 연결된 사이트의 Production 환경 변수를 메모리로 가져와 로컬 함수를 실행합니다. 인증 정보를 `.env`에 복사할 필요가 없습니다.
+
+최초 실행 환경에서는 `npx --yes netlify-cli login` 후 `npx --yes netlify-cli link --id b27d77d5-807a-4155-9929-2d2a8a7e38e6`로 연결합니다. 로그인과 인터넷 연결이 필요합니다. 사이트 연결 정보는 Git에서 제외된 `.netlify`에 저장됩니다.
+
+HTML 수정 후에는 서버를 다시 실행하면 빌드한 화면에 반영됩니다. 이 명령은 로컬 실행만 하며 사이트를 배포하지 않습니다.
+
+### 별도 로컬 환경 변수로 실행
+
+`npm run dev` 실행 후 http://localhost:8080 에 접속합니다. HTML과 데이터 API를 함께 제공합니다.
+실제 시트 조회에는 `.env` 파일에 `GOOGLE_SERVICE_ACCOUNT_JSON`과 `GOOGLE_SPREADSHEET_ID`를 설정해야 합니다. `.env`는 Git에서 제외됩니다.
+
 ## Netlify 배포
 
 - Git 저장소를 연결해 배포합니다. HTML 파일만 드래그해서 배포하면 서버 함수가 동작하지 않습니다.

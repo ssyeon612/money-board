@@ -47,14 +47,30 @@ test('page renders fetched data, escapes sheet text, preserves display on failur
   const nodes = {};
   let fail = false;
   let interval;
+  const tabNodes = ['overview', 'assets', 'invest', 'history'].map(name => ({
+    attributes: { 'aria-controls': `panel-${name}` }, handlers: {},
+    setAttribute(key, value) { this.attributes[key] = value; },
+    getAttribute(key) { return this.attributes[key]; },
+    addEventListener(key, handler) { this.handlers[key] = handler; },
+    focus() { this.focused = true; },
+  }));
   const context = {
-    document: { getElementById(id) { return nodes[id] ??= { addEventListener() {} }; }, addEventListener() {}, hidden: false },
-    fetch: async () => { if (fail) throw new Error('offline'); return { ok: true, json: async () => parseSheets(fixture()) }; },
+    window: { scrollTo() {}, matchMedia() { return { matches: false, addEventListener() {} }; } },
+    document: { documentElement: { dataset: {} }, querySelectorAll() { return tabNodes; }, getElementById(id) { return nodes[id] ??= { addEventListener() {}, setAttribute() {} }; }, addEventListener() {}, hidden: false },
+    fetch: async () => { if (fail) throw new Error('offline'); return { ok: true, headers: new Headers({ "content-type": "application/json" }), json: async () => parseSheets(fixture()) }; },
     AbortSignal, setInterval(callback) { interval = callback; },
   };
   vm.createContext(context);
   vm.runInContext(source, context);
   await new Promise(resolve => setImmediate(resolve));
+  tabNodes[2].handlers.click();
+  assert.equal(nodes['panel-invest'].hidden, false);
+  assert.equal(nodes['panel-overview'].hidden, true);
+  assert.equal(tabNodes[2].attributes['aria-selected'], 'true');
+  tabNodes[2].handlers.keydown({ key: 'ArrowRight', preventDefault() {} });
+  assert.equal(nodes['panel-history'].hidden, false);
+  assert.equal(nodes['panel-invest'].hidden, true);
+  assert.equal(tabNodes[3].focused, true);
   assert.match(nodes.summary.innerHTML, /250/);
   assert.match(nodes.items.innerHTML, /&lt;예금&gt;/);
   const previous = nodes.summary.innerHTML;

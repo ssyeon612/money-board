@@ -6,31 +6,40 @@
 <meta name="robots" content="noindex, nofollow">
 <title>내 자산 현황</title>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+KR:wght@400;500;600;700&display=swap">
+<script id="theme-init">
+try {
+  const savedTheme = localStorage.getItem("money-board-theme");
+  if (savedTheme === "light" || savedTheme === "dark") document.documentElement.dataset.theme = savedTheme;
+} catch {}
+</script>
 <style>
-/* Layout: one narrow reading column; summary first, then bar lists and plain ledgers. Ink-only marks, color reserved for 손익. */
+/* Responsive dashboard with persistent tab navigation. */
 :root {
-  --bg: #f5f6f7;
+  color-scheme: light;
+  --accent: #2878f0;
+  --soft: #edf4ff;
+  --bg: #f3f5f8;
   --surface: #ffffff;
-  --ink: #14171a;
-  --muted: #646b74;
-  --line: #e2e5e9;
+  --ink: #202632;
+  --muted: #707b8b;
+  --line: #edf0f4;
   --track: #e9ecef;
-  --mark: #1d2227;
-  --mark-2: #a3aab2;
+  --mark: #3984f5;
+  --mark-2: #b6d2fa;
   --up: #c92a2a;
   --down: #1c5fd0;
   --font: "IBM Plex Sans KR", -apple-system, BlinkMacSystemFont, "Apple SD Gothic Neo", "Malgun Gothic", sans-serif;
 }
 @media (prefers-color-scheme: dark) {
   :root:not([data-theme="light"]) {
-    --bg: #101214; --surface: #181b1e; --ink: #eceef0; --muted: #9aa1a9; --line: #2a2e33;
-    --track: #262a2f; --mark: #e1e4e8; --mark-2: #6b727a; --up: #ff7b7b; --down: #7db0ff;
+    --accent: #79aeff; --soft: #243550; --bg: #12151b; --surface: #1d222b; --ink: #f0f3f8; --muted: #a0aaba; --line: #2c3440;
+    --track: #2c3440; --mark: #6ba5ff; --mark-2: #405b82; --up: #ff7b7b; --down: #7db0ff;
     color-scheme: dark;
   }
 }
 :root[data-theme="dark"] {
-  --bg: #101214; --surface: #181b1e; --ink: #eceef0; --muted: #9aa1a9; --line: #2a2e33;
-  --track: #262a2f; --mark: #e1e4e8; --mark-2: #6b727a; --up: #ff7b7b; --down: #7db0ff;
+  --accent: #79aeff; --soft: #243550; --bg: #12151b; --surface: #1d222b; --ink: #f0f3f8; --muted: #a0aaba; --line: #2c3440;
+  --track: #2c3440; --mark: #6ba5ff; --mark-2: #405b82; --up: #ff7b7b; --down: #7db0ff;
   color-scheme: dark;
 }
 
@@ -42,33 +51,41 @@ body {
   font-variant-numeric: tabular-nums;
   padding-inline: 16px; padding-block: 28px 56px;
 }
-.wrap { max-width: 920px; margin-inline: auto; display: flex; flex-direction: column; gap: 20px; }
+.wrap { max-width: 880px; margin-inline: auto; display: flex; flex-direction: column; gap: 20px; }
 
 header { display: flex; justify-content: space-between; align-items: baseline; flex-wrap: wrap; gap: 4px 16px; }
-h1 { font-size: 22px; font-weight: 700; margin: 0; letter-spacing: -0.01em; }
+h1 { font-size: 22px; font-weight: 700; margin: 0; letter-spacing: -0.04em; }
 .connection { color: var(--muted); font-size: 13px; }
 button { font: inherit; cursor: pointer; color: var(--ink); background: var(--surface); border: 1px solid var(--line); border-radius: 6px; padding: 5px 10px; }
 button:disabled { cursor: wait; opacity: .6; }
+.header-title { display: flex; align-items: center; justify-content: space-between; width: 100%; gap: 12px; }
+.header-tools { display: flex; align-items: center; justify-content: space-between; gap: 16px; width: 100%; }
+.theme-toggle { width: 44px; height: 44px; padding: 0; display: grid; place-items: center; flex: none; border: 1px solid var(--line); border-radius: 50%; background: var(--surface); color: var(--ink); transition: background .18s, color .18s; }
+.theme-toggle:hover { background: var(--soft); color: var(--accent); }
+.theme-toggle svg { width: 20px; height: 20px; fill: none; stroke: currentColor; stroke-width: 1.8; stroke-linecap: round; stroke-linejoin: round; }
+.theme-toggle .moon { display: none; }
+.theme-toggle[aria-pressed="true"] .sun { display: none; }
+.theme-toggle[aria-pressed="true"] .moon { display: block; }
 .asof { color: var(--muted); font-size: 13px; }
 
-section { background: var(--surface); border: 1px solid var(--line); border-radius: 10px; padding: 20px; min-width: 0; }
-h2 { display: flex; align-items: center; gap: 8px; font-size: 15px; font-weight: 600; margin: 0 0 16px; }
-h2 svg { width: 18px; height: 18px; flex: none; fill: none; stroke: currentColor; stroke-width: 1.7; stroke-linecap: round; stroke-linejoin: round; }
-h3 { font-size: 13px; font-weight: 500; color: var(--muted); margin: 20px 0 8px; }
-.note { color: var(--muted); font-size: 13px; margin: 12px 0 0; }
+section { background: var(--surface); border: 0; border-radius: 24px; padding: 28px; min-width: 0; }
+h2 { display: flex; align-items: center; gap: 8px; font-size: 18px; font-weight: 700; margin: 0 0 24px; letter-spacing: -.03em; }
+h2 svg { color: var(--accent); width: 22px; height: 22px; flex: none; fill: none; stroke: currentColor; stroke-width: 1.7; stroke-linecap: round; stroke-linejoin: round; }
+h3 { font-size: 13px; font-weight: 500; color: var(--muted); margin: 28px 0 14px; }
+.note { color: var(--muted); font-size: 12px; line-height: 1.7; margin: 16px 0 0; }
 
 .cols { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; }
 @media (max-width: 720px) { .cols { grid-template-columns: 1fr; } }
 
 /* Summary */
 .label { color: var(--muted); font-size: 13px; }
-.hero { font-size: clamp(30px, 8vw, 44px); font-weight: 700; letter-spacing: -0.02em; line-height: 1.15; }
+.hero { font-size: clamp(30px, 8vw, 44px); font-weight: 700; letter-spacing: -0.02em; line-height: 1.3; margin-top: 8px; }
 .unit { font-size: 0.5em; font-weight: 500; margin-left: 2px; color: var(--muted); }
 .stats { display: grid; grid-template-columns: 1fr 1fr; gap: 12px 24px; margin-top: 18px; padding-top: 16px; border-top: 1px solid var(--line); }
 .stat b { display: block; font-size: 19px; font-weight: 600; }
 
 /* Two-part split bar */
-.split { display: flex; gap: 2px; height: 10px; margin-top: 18px; }
+.split { display: flex; gap: 2px; height: 8px; margin-top: 28px; }
 .split i { display: block; height: 100%; border-radius: 3px; background: var(--mark); min-width: 4px; }
 .split i + i { background: var(--mark-2); }
 .legend { display: flex; justify-content: space-between; gap: 12px; margin-top: 10px; font-size: 13px; }
@@ -82,7 +99,7 @@ h3 { font-size: 13px; font-weight: 500; color: var(--muted); margin: 20px 0 8px;
 .legend span.p { color: var(--muted); margin-left: 6px; }
 
 /* Bar list */
-.bars { display: flex; flex-direction: column; gap: 14px; }
+.bars { display: flex; flex-direction: column; gap: 22px; }
 .bar-row .top { display: flex; justify-content: space-between; gap: 12px; align-items: baseline; }
 .bar-row .name { font-weight: 500; }
 .bar-row .val { white-space: nowrap; }
@@ -92,40 +109,104 @@ h3 { font-size: 13px; font-weight: 500; color: var(--muted); margin: 20px 0 8px;
 
 /* Ledger rows */
 .rows { display: flex; flex-direction: column; }
-.row { display: flex; justify-content: space-between; gap: 16px; padding: 11px 0; border-top: 1px solid var(--line); }
+.row { display: flex; justify-content: space-between; gap: 16px; padding: 20px 0; border-top: 1px solid var(--line); }
 .row:first-child { border-top: 0; padding-top: 0; }
 .row .l { min-width: 0; }
 .row .r { text-align: right; white-space: nowrap; flex: none; }
 .row .t { font-weight: 500; }
-.row .s { color: var(--muted); font-size: 13px; }
-.row.total { border-top: 1px solid var(--ink); font-weight: 600; }
+.row .s { margin-top: 5px; color: var(--muted); font-size: 13px; }
+.row.total { border-top: 1px solid var(--line); margin-top: 8px; padding-top: 22px; font-weight: 700; }
 .row.total .t { font-weight: 600; }
-.tag { display: inline-block; font-size: 11px; color: var(--muted); border: 1px solid var(--line); border-radius: 4px; padding: 0 5px; margin-left: 6px; vertical-align: 1px; font-weight: 400; }
+.tag { display: inline-block; font-size: 11px; color: var(--muted); background: var(--bg); border: 0; border-radius: 5px; padding: 2px 6px; margin-left: 6px; vertical-align: 1px; font-weight: 400; }
 
 .up { color: var(--up); }
 .down { color: var(--down); }
 
 .kpis { display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px 20px; }
 @media (max-width: 720px) { .kpis { grid-template-columns: 1fr 1fr; } }
-.kpis b { display: block; font-size: 17px; font-weight: 600; }
+.kpis > div { background: var(--bg); border-radius: 14px; padding: 16px; min-width: 0; }
+.kpis b { margin-top: 6px; display: block; font-size: 17px; font-weight: 600; }
 
 .scroll { overflow-x: auto; }
 table { width: 100%; border-collapse: collapse; min-width: 480px; }
 th, td { padding: 9px 0 9px 16px; text-align: right; border-top: 1px solid var(--line); white-space: nowrap; }
 th:first-child, td:first-child { text-align: left; padding-left: 0; }
 thead th { border-top: 0; padding-top: 0; color: var(--muted); font-size: 13px; font-weight: 500; }
+
+[hidden] { display: none !important; }
+.tab-nav { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 6px; padding: 6px; background: var(--surface); border: 0; border-radius: 18px; position: sticky; top: 12px; z-index: 10; }
+.tab-nav button { border: 0; background: transparent; border-radius: 9px; min-height: 46px; font-weight: 500; color: var(--muted); }
+.tab-nav button[aria-selected="true"] { background: var(--soft); color: var(--accent); font-weight: 600; }
+.tab-nav svg { width: 21px; height: 21px; fill: none; stroke: currentColor; stroke-width: 1.8; stroke-linecap: round; stroke-linejoin: round; }
+.tab-nav button { display: flex; justify-content: center; align-items: center; gap: 8px; transition: background .15s, color .15s; }
+#summary { padding: 32px; }
+#summary > .label { font-size: 15px; font-weight: 500; }
+.connection button { border: 0; border-radius: 12px; background: var(--soft); color: var(--accent); font-size: 12px; padding-inline: 14px; }
+button:focus-visible, [role="tabpanel"]:focus-visible { outline: 3px solid var(--down); outline-offset: 3px; }
+.tab-panel { display: flex; flex-direction: column; gap: 20px; min-width: 0; }
+.connection { display: flex; justify-content: space-between; align-items: center; gap: 12px; }
+.connection span { min-width: 0; overflow-wrap: anywhere; }
+.connection button { flex: none; min-height: 40px; }
+.row .s, .row .t { overflow-wrap: anywhere; }
+@media (max-width: 600px) {
+  body { padding: max(20px, env(safe-area-inset-top)) 16px calc(96px + env(safe-area-inset-bottom)); font-size: 14px; }
+  .wrap, .tab-panel { gap: 16px; }
+  header { align-items: flex-start; flex-direction: column; gap: 6px; }
+  h1 { font-size: 21px; }
+  section { padding: 24px 20px; border-radius: 22px; }
+  #summary { padding: 26px 20px; }
+  .kpis > div { padding: 14px 12px; }
+  .tab-nav { position: fixed; top: auto; bottom: 0; left: 0; right: 0; border-radius: 18px 18px 0 0; padding: 8px max(12px, env(safe-area-inset-left)) calc(8px + env(safe-area-inset-bottom)); border-bottom: 0; box-shadow: 0 -4px 20px #00000008; }
+  .tab-nav button { flex-direction: column; gap: 5px; padding: 6px 2px; min-height: 56px; font-size: 11px; background: transparent; }
+  .tab-nav button[aria-selected="true"] { background: transparent; color: var(--accent); }
+  .hero { font-size: clamp(26px, 8vw, 40px); overflow-wrap: anywhere; }
+  .stats { gap: 16px; }
+  .stat b, .kpis b { font-size: clamp(14px, 4vw, 18px); overflow-wrap: anywhere; }
+  .legend b { display: block; font-size: 14px; overflow-wrap: anywhere; }
+  .legend span.p { margin-left: 0; font-size: 12px; }
+  .bar-row .top { gap: 6px; flex-wrap: wrap; }
+  .bar-row .val { margin-left: auto; }
+  .row { gap: 8px; flex-wrap: wrap; }
+  .row .l { flex: 1 1 130px; }
+  .row .r { margin-left: auto; max-width: 100%; white-space: normal; }
+  .kpis { gap: 18px 12px; }
+  .scroll { overflow: visible; }
+  table, tbody { display: block; min-width: 0; }
+  thead { display: none; }
+  tbody { display: grid; gap: 12px; }
+  tbody tr { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: 10px 16px; border: 1px solid var(--line); border-radius: 12px; padding: 14px; }
+  tbody td { display: flex; flex-direction: column; align-items: flex-start; border: 0; padding: 0; text-align: left; white-space: normal; overflow-wrap: anywhere; min-width: 0; }
+  tbody td::before { content: attr(data-label); color: var(--muted); font-size: 12px; margin-bottom: 3px; }
+  tbody td:first-child { grid-column: 1 / -1; font-weight: 600; padding-bottom: 8px; border-bottom: 1px solid var(--line); }
+  tbody td:first-child::before { display: none; }
+}
 </style>
 
 </head>
 <body>
 <div class="wrap">
   <header>
-    <h1>내 자산 현황</h1>
-    <span class="asof" id="asof">시트 연결 중…</span>
+    <div class="header-title">
+      <h1>내 자산 현황</h1>
+    </div>
+    <div class="header-tools">
+      <span class="asof" id="asof">시트 연결 중…</span>
+      <button class="theme-toggle" id="theme-toggle" type="button" aria-label="다크 모드로 전환" aria-pressed="false" title="다크 모드로 전환">
+        <svg class="sun" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M2 12h2M20 12h2M5 5l1.5 1.5M17.5 17.5L19 19M5 19l1.5-1.5M17.5 6.5L19 5"/></svg>
+        <svg class="moon" viewBox="0 0 24 24" aria-hidden="true"><path d="M20.5 14A8.7 8.7 0 0 1 10 3.5 8.8 8.8 0 1 0 20.5 14Z"/></svg>
+      </button>
+    </div>
   </header>
 
   <div class="connection" role="status" aria-live="polite"><span id="connection-status">자산 정보를 불러오는 중입니다.</span> <button id="refresh" type="button">새로고침</button></div>
-  <section id="summary"></section>
+  <nav class="tab-nav" role="tablist" aria-label="자산 현황 메뉴">
+    <button type="button" id="tab-overview" role="tab" aria-selected="true" aria-controls="panel-overview" tabindex="0"><svg viewBox="0 0 24 24" aria-hidden="true"><rect x="4" y="4" width="6" height="6" rx="1.5"/><rect x="14" y="4" width="6" height="6" rx="1.5"/><rect x="4" y="14" width="6" height="6" rx="1.5"/><rect x="14" y="14" width="6" height="6" rx="1.5"/></svg><span>요약</span></button>
+    <button type="button" id="tab-assets" role="tab" aria-selected="false" aria-controls="panel-assets" tabindex="-1"><svg viewBox="0 0 24 24" aria-hidden="true"><rect x="3" y="5" width="18" height="15" rx="3"/><path d="M3 9h18M16 14h2"/></svg><span>자산</span></button>
+    <button type="button" id="tab-invest" role="tab" aria-selected="false" aria-controls="panel-invest" tabindex="-1"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 4v16h16M8 14l4-5 4 3 4-7"/></svg><span>투자</span></button>
+    <button type="button" id="tab-history" role="tab" aria-selected="false" aria-controls="panel-history" tabindex="-1"><svg viewBox="0 0 24 24" aria-hidden="true"><rect x="4" y="5" width="16" height="16" rx="3"/><path d="M8 3v4M16 3v4M4 11h16M8 15h2M14 15h2"/></svg><span>월별 추이</span></button>
+  </nav>
+  <div class="tab-panel" id="panel-overview" role="tabpanel" aria-labelledby="tab-overview" tabindex="0">
+  <section id="summary"><div class="label">내 순자산</div><div class="hero">—<span class="unit">원</span></div><p class="note">연결되면 자산 현황이 여기에 표시됩니다.</p></section>
   <p class="note">총자산·순자산·자산 구성은 자산현황 탭의 개별 항목을 합산합니다. 월별 추이는 시트에 기록된 값을 표시합니다.</p>
 
   <div class="cols">
@@ -140,6 +221,8 @@ thead th { border-top: 0; padding-top: 0; color: var(--muted); font-size: 13px; 
     </section>
   </div>
 
+  </div>
+  <div class="tab-panel" id="panel-assets" role="tabpanel" aria-labelledby="tab-assets" tabindex="0" hidden>
   <section>
     <h2><svg viewBox="0 0 24 24"><path d="M5 7h14M5 12h14M5 17h14"/></svg>항목별 자산</h2>
     <div class="rows" id="items"></div>
@@ -147,6 +230,8 @@ thead th { border-top: 0; padding-top: 0; color: var(--muted); font-size: 13px; 
     <div class="rows" id="debts"></div>
   </section>
 
+  </div>
+  <div class="tab-panel" id="panel-invest" role="tabpanel" aria-labelledby="tab-invest" tabindex="0" hidden>
   <section>
     <h2><svg viewBox="0 0 24 24"><path d="M4 5v14h16M8 15l3-4 3 2 5-6"/></svg>투자 종목</h2>
     <div class="kpis" id="invest-kpis"></div>
@@ -156,6 +241,8 @@ thead th { border-top: 0; padding-top: 0; color: var(--muted); font-size: 13px; 
     <p class="note" id="fx"></p>
   </section>
 
+  </div>
+  <div class="tab-panel" id="panel-history" role="tabpanel" aria-labelledby="tab-history" tabindex="0" hidden>
   <section>
     <h2><svg viewBox="0 0 24 24"><rect x="4" y="5" width="16" height="15" rx="2"/><path d="M4 10h16M9 3v4M15 3v4"/></svg>월별 자산 추이</h2>
     <div class="scroll">
@@ -167,9 +254,53 @@ thead th { border-top: 0; padding-top: 0; color: var(--muted); font-size: 13px; 
     <p class="note">시트에 월별 값이 입력된 달만 표시합니다.</p>
   </section>
 </div>
+</div>
 
 <script>
 const $ = id => document.getElementById(id);
+const themePreference = window.matchMedia("(prefers-color-scheme: dark)");
+function currentTheme() {
+  return document.documentElement.dataset.theme || (themePreference.matches ? "dark" : "light");
+}
+function updateThemeButton() {
+  const dark = currentTheme() === "dark";
+  const label = dark ? "라이트 모드로 전환" : "다크 모드로 전환";
+  $("theme-toggle").setAttribute("aria-pressed", String(dark));
+  $("theme-toggle").setAttribute("aria-label", label);
+  $("theme-toggle").setAttribute("title", label);
+}
+$("theme-toggle").addEventListener("click", () => {
+  const theme = currentTheme() === "dark" ? "light" : "dark";
+  document.documentElement.dataset.theme = theme;
+  try { localStorage.setItem("money-board-theme", theme); } catch {}
+  updateThemeButton();
+});
+themePreference.addEventListener("change", updateThemeButton);
+updateThemeButton();
+const tabs = [...document.querySelectorAll('[role="tab"]')];
+function selectTab(tab) {
+  tabs.forEach(item => {
+    const active = item === tab;
+    item.setAttribute("aria-selected", String(active));
+    item.tabIndex = active ? 0 : -1;
+    $(item.getAttribute("aria-controls")).hidden = !active;
+  });
+  window.scrollTo({ top: 0, behavior: "instant" });
+}
+tabs.forEach((tab, index) => {
+  tab.addEventListener("click", () => selectTab(tab));
+  tab.addEventListener("keydown", event => {
+    let next;
+    if (event.key === "ArrowRight") next = (index + 1) % tabs.length;
+    if (event.key === "ArrowLeft") next = (index - 1 + tabs.length) % tabs.length;
+    if (event.key === "Home") next = 0;
+    if (event.key === "End") next = tabs.length - 1;
+    if (next === undefined) return;
+    event.preventDefault();
+    selectTab(tabs[next]);
+    tabs[next].focus();
+  });
+});
 const n = v => Math.round(v).toLocaleString("ko-KR");
 const won = v => n(v) + "원";
 const pct = (v, d = 1) => v.toFixed(d) + "%";
@@ -192,7 +323,7 @@ const ratio = (a, b) => b === 0 ? 0 : a / b * 100;
 function render(D) {
 
 $("summary").innerHTML = `
-  <div class="label">순자산</div>
+  <div class="label">내 순자산</div>
   <div class="hero">${n(D.net)}<span class="unit">원</span></div>
   ${split("순자산", D.net, "부채", D.debt)}
   <div class="stats">
@@ -241,7 +372,7 @@ $("holdings").innerHTML = [...I.holdings].sort((a, b) => b[7] - a[7]).map(([code
 $("fx").textContent = `해외 종목은 USD/KRW ${I.usdkrw.toLocaleString("ko-KR")} 기준으로 환산했습니다.`;
 
 $("monthly").innerHTML = D.monthly.map(([m, total, diff, debt, net]) => `
-  <tr><td>${esc(m)}</td><td>${won(total)}</td><td>${diff == null ? "-" : delta(diff, won(Math.abs(diff)))}</td><td>${won(debt)}</td><td>${won(net)}</td></tr>`).join("");
+  <tr><td data-label="기준월">${esc(m)}</td><td data-label="총자산">${won(total)}</td><td data-label="전월 대비">${diff == null ? "-" : delta(diff, won(Math.abs(diff)))}</td><td data-label="부채">${won(debt)}</td><td data-label="순자산">${won(net)}</td></tr>`).join("");
 }
 
 let loading = false;
@@ -254,6 +385,9 @@ async function loadData() {
   $("connection-status").textContent = "시트에서 최신 정보를 불러오는 중입니다…";
   try {
     const response = await fetch("/.netlify/functions/assets", { cache: "no-store", signal: AbortSignal.timeout(25000) });
+    if (!response.headers.get("content-type")?.includes("application/json")) {
+      throw new Error("데이터 API에 연결할 수 없습니다. 로컬에서는 npm run dev로 서버를 실행해 주세요.");
+    }
     const data = await response.json();
     if (!response.ok) throw new Error(data.error || "시트 조회에 실패했습니다.");
     render(data);
